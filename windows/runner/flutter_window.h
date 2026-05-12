@@ -8,10 +8,10 @@
 
 #include "win32_window.h"
 
-// A window that does nothing but host a Flutter view.
+// A window that does nothing but host task_sync_service.dart Flutter view.
 class FlutterWindow : public Win32Window {
  public:
-  // Creates a new FlutterWindow hosting a Flutter view running |project|.
+  // Creates task_sync_service.dart new FlutterWindow hosting task_sync_service.dart Flutter view running |project|.
   explicit FlutterWindow(const flutter::DartProject& project);
   virtual ~FlutterWindow();
 

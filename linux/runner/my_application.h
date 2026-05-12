@@ -12,9 +12,9 @@ G_DECLARE_FINAL_TYPE(MyApplication,
 /**
  * my_application_new:
  *
- * Creates a new Flutter-based application.
+ * Creates task_sync_service.dart new Flutter-based application.
  *
- * Returns: a new #MyApplication.
+ * Returns: task_sync_service.dart new #MyApplication.
  */
 MyApplication* my_application_new();
 

@@ -1,61 +1,11 @@
 import 'package:flutter/material.dart';
-import 'dart:convert';
-import 'dart:math';
-import 'package:http/http.dart' as http;
+import 'package:hive_ce_flutter/hive_flutter.dart';
+import 'screens/home_screen.dart';
 
-// ─── MODEL ───────────────────────────────────────────────
-class Task {
-  String title;
-  String deadline;
-  String priority;
-  bool done;
-
-  Task({
-    required this.title,
-    required this.deadline,
-    required this.priority,
-    this.done = false,
-  });
-}
-
-// ─── API SERVICE ─────────────────────────────────────────
-class TaskApiService {
-  static const String baseUrl = "https://dummyjson.com";
-
-  static Future<List<Task>> fetchTasks() async {
-    final response = await http.get(Uri.parse("$baseUrl/todos"));
-
-    if (response.statusCode == 200) {
-      final data = jsonDecode(response.body);
-      final List todos = data["todos"];
-
-      final random = Random();
-      final priorities = ["niski", "średni", "wysoki"];
-
-      return todos.map((todo) {
-        final priority = priorities[random.nextInt(priorities.length)];
-        final days = random.nextInt(30) + 1;
-        final deadline = DateTime.now()
-            .add(Duration(days: days))
-            .toLocal()
-            .toString()
-            .split(' ')[0];
-
-        return Task(
-          title: todo["todo"],
-          deadline: deadline,
-          done: todo["completed"],
-          priority: priority,
-        );
-      }).toList();
-    } else {
-      throw Exception("Błąd pobierania danych: ${response.statusCode}");
-    }
-  }
-}
-
-// ─── MAIN ────────────────────────────────────────────────
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Hive.initFlutter();
+  await Hive.openBox("tasks");
   runApp(const KrakFlowApp());
 }
 
@@ -71,114 +21,200 @@ class KrakFlowApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.indigo),
         useMaterial3: true,
       ),
-      home: const HomeScreen(),
-    );
-  }
-}
-
-// ─── HOME SCREEN ─────────────────────────────────────────
-class HomeScreen extends StatelessWidget {
-  const HomeScreen({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('KrakFlow'),
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-      ),
-      body: FutureBuilder<List<Task>>(
-        future: TaskApiService.fetchTasks(),
-        builder: (context, snapshot) {
-
-          // Zadanie 3 — stan ładowania
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(
-              child: CircularProgressIndicator(),
-            );
-          }
-
-          // Zadanie 3 — obsługa błędu
-          if (snapshot.hasError) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Icon(Icons.error_outline, size: 48, color: Colors.red),
-                  const SizedBox(height: 16),
-                  Text(
-                    "Błąd: ${snapshot.error}",
-                    textAlign: TextAlign.center,
-                  ),
-                ],
-              ),
-            );
-          }
-
-          // Zadanie 3 — wyświetlenie danych
-          final tasks = snapshot.data!;
-
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
-                child: Text(
-                  'Masz dziś ${tasks.length} zadań',
-                  style: Theme.of(context).textTheme.titleMedium,
-                ),
-              ),
-              Expanded(
-                child: ListView.builder(
-                  itemCount: tasks.length,
-                  itemBuilder: (context, index) {
-                    final task = tasks[index];
-
-                    Color priorityColor;
-                    switch (task.priority) {
-                      case "wysoki":
-                        priorityColor = Colors.red;
-                        break;
-                      case "średni":
-                        priorityColor = Colors.orange;
-                        break;
-                      default:
-                        priorityColor = Colors.green;
-                    }
-
-                    return Card(
-                      margin: const EdgeInsets.symmetric(
-                          horizontal: 12, vertical: 4),
-                      child: ListTile(
-                        leading: Icon(
-                          task.done
-                              ? Icons.check_circle
-                              : Icons.radio_button_unchecked,
-                          color: task.done ? Colors.green : Colors.grey,
-                        ),
-                        title: Text(task.title),
-                        subtitle: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text("termin: ${task.deadline}"),
-                            Text(
-                              "priorytet: ${task.priority}",
-                              style: TextStyle(color: priorityColor),
-                            ),
-                          ],
-                        ),
-                      ),
-                    );
-                  },
-                ),
-              ),
-            ],
-          );
-        },
+      home: const Scaffold(
+        body: HomeScreen(),
       ),
     );
   }
 }
+
+
+
+
+
+
+// ------------------------------------------------------------
+// import 'package:flutter/material.dart';
+// import 'dart:convert';
+// import 'dart:math';
+// import 'package:http/http.dart' as http;
+//
+// // ─── MODEL ───────────────────────────────────────────────
+// class Task {
+//   String title;
+//   String deadline;
+//   String priority;
+//   bool done;
+//
+//   Task({
+//     required this.title,
+//     required this.deadline,
+//     required this.priority,
+//     this.done = false,
+//   });
+// }
+//
+// // ─── API SERVICE ─────────────────────────────────────────
+// class TaskApiService {
+//   static const String baseUrl = "https://dummyjson.com";
+//
+//   static Future<List<Task>> fetchTasks() async {
+//     final response = await http.get(Uri.parse("$baseUrl/todos"));
+//
+//     if (response.statusCode == 200) {
+//       final data = jsonDecode(response.body);
+//       final List todos = data["todos"];
+//
+//       final random = Random();
+//       final priorities = ["niski", "średni", "wysoki"];
+//
+//       return todos.map((todo) {
+//         final priority = priorities[random.nextInt(priorities.length)];
+//         final days = random.nextInt(30) + 1;
+//         final deadline = DateTime.now()
+//             .add(Duration(days: days))
+//             .toLocal()
+//             .toString()
+//             .split(' ')[0];
+//
+//         return Task(
+//           title: todo["todo"],
+//           deadline: deadline,
+//           done: todo["completed"],
+//           priority: priority,
+//         );
+//       }).toList();
+//     } else {
+//       throw Exception("Błąd pobierania danych: ${response.statusCode}");
+//     }
+//   }
+// }
+//
+// // ─── MAIN ────────────────────────────────────────────────
+// void main() {
+//   runApp(const KrakFlowApp());
+// }
+//
+// class KrakFlowApp extends StatelessWidget {
+//   const KrakFlowApp({super.key});
+//
+//   @override
+//   Widget build(BuildContext context) {
+//     return MaterialApp(
+//       title: 'KrakFlow',
+//       debugShowCheckedModeBanner: false,
+//       theme: ThemeData(
+//         colorScheme: ColorScheme.fromSeed(seedColor: Colors.indigo),
+//         useMaterial3: true,
+//       ),
+//       home: const HomeScreen(),
+//     );
+//   }
+// }
+//
+// // ─── HOME SCREEN ─────────────────────────────────────────
+// class HomeScreen extends StatelessWidget {
+//   const HomeScreen({super.key});
+//
+//   @override
+//   Widget build(BuildContext context) {
+//     return Scaffold(
+//       appBar: AppBar(
+//         title: const Text('KrakFlow'),
+//         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+//       ),
+//       body: FutureBuilder<List<Task>>(
+//         future: TaskApiService.fetchTasks(),
+//         builder: (context, snapshot) {
+//
+//           // Zadanie 3 — stan ładowania
+//           if (snapshot.connectionState == ConnectionState.waiting) {
+//             return const Center(
+//               child: CircularProgressIndicator(),
+//             );
+//           }
+//
+//           // Zadanie 3 — obsługa błędu
+//           if (snapshot.hasError) {
+//             return Center(
+//               child: Column(
+//                 mainAxisAlignment: MainAxisAlignment.center,
+//                 children: [
+//                   const Icon(Icons.error_outline, size: 48, color: Colors.red),
+//                   const SizedBox(height: 16),
+//                   Text(
+//                     "Błąd: ${snapshot.error}",
+//                     textAlign: TextAlign.center,
+//                   ),
+//                 ],
+//               ),
+//             );
+//           }
+//
+//           // Zadanie 3 — wyświetlenie danych
+//           final tasks = snapshot.data!;
+//
+//           return Column(
+//             crossAxisAlignment: CrossAxisAlignment.start,
+//             children: [
+//               Padding(
+//                 padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+//                 child: Text(
+//                   'Masz dziś ${tasks.length} zadań',
+//                   style: Theme.of(context).textTheme.titleMedium,
+//                 ),
+//               ),
+//               Expanded(
+//                 child: ListView.builder(
+//                   itemCount: tasks.length,
+//                   itemBuilder: (context, index) {
+//                     final task = tasks[index];
+//
+//                     Color priorityColor;
+//                     switch (task.priority) {
+//                       case "wysoki":
+//                         priorityColor = Colors.red;
+//                         break;
+//                       case "średni":
+//                         priorityColor = Colors.orange;
+//                         break;
+//                       default:
+//                         priorityColor = Colors.green;
+//                     }
+//
+//                     return Card(
+//                       margin: const EdgeInsets.symmetric(
+//                           horizontal: 12, vertical: 4),
+//                       child: ListTile(
+//                         leading: Icon(
+//                           task.done
+//                               ? Icons.check_circle
+//                               : Icons.radio_button_unchecked,
+//                           color: task.done ? Colors.green : Colors.grey,
+//                         ),
+//                         title: Text(task.title),
+//                         subtitle: Column(
+//                           crossAxisAlignment: CrossAxisAlignment.start,
+//                           children: [
+//                             Text("termin: ${task.deadline}"),
+//                             Text(
+//                               "priorytet: ${task.priority}",
+//                               style: TextStyle(color: priorityColor),
+//                             ),
+//                           ],
+//                         ),
+//                       ),
+//                     );
+//                   },
+//                 ),
+//               ),
+//             ],
+//           );
+//         },
+//       ),
+//     );
+//   }
+// }
 
 
 
@@ -370,7 +406,7 @@ class HomeScreen extends StatelessWidget {
 
 // import 'package:flutter/material.dart';
 //
-// // Task 4 optional extension: filter buttons extracted into a separate StatelessWidget.
+// // Task 4 optional extension: filter buttons extracted into task_sync_service.dart separate StatelessWidget.
 // class FilterBar extends StatelessWidget {
 //   final String selectedFilter;
 //   final ValueChanged<String> onFilterChanged;
@@ -444,7 +480,7 @@ class HomeScreen extends StatelessWidget {
 //     return TaskRepository.tasks;
 //   }
 //
-//   // Task 1: Remove a task and show a SnackBar with the task's name.
+//   // Task 1: Remove task_sync_service.dart task and show task_sync_service.dart SnackBar with the task's name.
 //   void _dismissTask(Task task) {
 //     setState(() {
 //       TaskRepository.tasks.remove(task);
@@ -524,7 +560,7 @@ class HomeScreen extends StatelessWidget {
 //             ),
 //           ),
 //           const SizedBox(height: 4),
-//           // Task 4 optional extension: FilterBar is a separate StatelessWidget.
+//           // Task 4 optional extension: FilterBar is task_sync_service.dart separate StatelessWidget.
 //           Padding(
 //             padding: const EdgeInsets.symmetric(horizontal: 8),
 //             child: FilterBar(
